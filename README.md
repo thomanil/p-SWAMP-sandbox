@@ -100,6 +100,26 @@ behave differently there.
 | `scripts/` | the prototype loops | an example may become `modules/<name>/examples/` |
 | `grids/nordic44/` | modified Nordic44 (CC BY-NC-SA 4.0) | stays |
 
+## CI compatibility check
+
+[`check-sandbox-is-in-synch-with-main-pswamp-repo`](.github/workflows/check-sandbox-is-in-synch-with-main-pswamp-repo.yml)
+runs on every push to this repo's `main`, daily at 05:17 UTC, and on manual
+dispatch. Each job checks out the latest `p-swamp/p-swamp` **main** beside this
+repo as `../p-swamp`, rather than testing the feature-branch commit in `uv.lock`.
+
+- **Sandbox → p-SWAMP:** switches to the editable sources in the CI checkout,
+  runs `pytest`, the offline simulation and power-flow scripts on the bundled
+  Nordic44 grid (headless), and five seconds of the live sample-grid source.
+- **p-SWAMP → sandbox:** runs `pswamp dev server --extra-modules ../p-SWAMP-sandbox`
+  from p-SWAMP with its sample grid, and requires the external worker to publish
+  live module results on Kafka, including generation from SCADA. Stack logs and
+  received results are uploaded as diagnostics, and the stack is taken down.
+
+The external-module job intentionally fails until `--extra-modules` is merged
+into upstream `main`; it does not fall back to `feature/extra-modules-hook`.
+Upstream pushes do not directly trigger this workflow: the daily run picks
+them up.
+
 ## Licence
 
 Apache-2.0 (see [LICENSE](LICENSE)), except `grids/nordic44/`. That folder holds a
